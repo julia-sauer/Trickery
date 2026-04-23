@@ -8,7 +8,7 @@ BUILD_DIR = build
 LIB_DIR = $(BUILD_DIR)/lib
 BIN_DIR = $(BUILD_DIR)/bin
 
-LIB = $(LIB_DIR)/hook.so
+LIB = $(LIB_DIR)/sharedLib.so
 
 # all source files
 SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
