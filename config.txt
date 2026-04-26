@@ -1,0 +1,2 @@
+BLOCK_READ=secret
+BLOCK_DELETE=.pdf
