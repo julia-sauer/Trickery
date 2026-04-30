@@ -1,4 +1,4 @@
-#define _GNU_SOUCRE
+#define _GNU_SOURCE
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <stdio.h>
