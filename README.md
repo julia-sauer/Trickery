@@ -10,19 +10,14 @@ zum ltrace (viel übersichtlicher) abelade:
 sudo apt-get install ltrace
 ```
 
-im src sind d files mit de neue implementatione vo de funktione
-im tests sind d teschts wo me die neue implementatione teschtet.
+im src privacy.c isch d datei wo alli hijacked funktione drikömme
 
 zums teschte:
 1. zum d shared library (.so) zbaue:
 ```bash
-make
+gcc -shared -fPIC -o privacy.so src/privacy.c -ldl
 ```
-2. zum d teschts zbaue: 
+2. zum dini funktion zteschte: 
 ```bash
-make test
-```
-3. zum alles uszführe/teschte: 
-```bash 
-make run
+LD_PRELOAD=./privacy.so <COMMAND WO ME WILL HIJACKE>
 ```
