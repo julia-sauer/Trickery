@@ -7,8 +7,37 @@
 #include <string.h>
 #include <sys/syscall.h>
 
+int config_block_words(const char *path) {
+    FILE *config = fopen("config.txt", "r"); //opens the config file with read permission
+    if(config == NULL){
+        return 0;
+    }
+    char line[256];
+
+    while (fgets(line, sizeof(line), config)) {
+        if(strncmp(line, "BLOCK_OPEN=", 11) == 0) {
+            char *blockedWord = line + 11;
+            blockedWord[strcspn(blockedWord, "\n")] = '\0';
+
+            if(strstr(path, blockedWord) != NULL) {
+                fclose;
+                return 1;
+            }
+        }
+    }
+    fclose;
+    return 0;
+
+}
+
+// open hijack zum teschte: cat
 int open(const char *path, int flag, ...) {
     printf("hijacked functions for open got called!\n");
+    if(config_block_words(path)) {
+        printf("[hook] access denied: %s\n", path);
+        errno = EACCES;
+        return -1;
+    }
     int(*real_open)(const char *, int, ...) = dlsym(RTLD_NEXT, "open");
 
     return real_open(path, flag);
@@ -23,7 +52,7 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
     return -1; // signals failure to the caller
 }
 
-// cat hijack   zum teschte: LD_PRELOAD=./privacy.so rm cannotRemove.txt
+// write hijack   zum teschte: LD_PRELOAD=./privacy.so cat? cannotRemove.txt
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
     static __thread int active = 0; // flag so there won't be a loop
 

@@ -1,3 +1,3 @@
-BLOCK_OPENAT=extrasecret
+BLOCK_OPEN=secret
 BLOCK_READ=secret
 BLOCK_DELETE=.pdf
