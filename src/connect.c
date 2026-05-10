@@ -66,7 +66,7 @@ int connect(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
 
     if(config_block_address(ip)) { //calling the function to see if the relevant ip should be blocked; if returns 0 this is skiped if return 1:
         printf("[hook] your are not allowed to connect to %s!\n", ip); //outprinted which ip is blocked
-        errno = EACCES; //error message permission denied
+        errno = EACCES; //error message from system
         return -1; //access failed
     }
 
