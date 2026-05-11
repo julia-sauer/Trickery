@@ -7,7 +7,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 
-int config_block_words(const char *path) {
+int config_block_words(const char *path, const char *mode) {
     FILE *config = fopen("config.txt", "r"); //opens the config file with read permission
     if(config == NULL){
         return 0;
@@ -15,7 +15,7 @@ int config_block_words(const char *path) {
     char line[256];
 
     while (fgets(line, sizeof(line), config)) {
-        if(strncmp(line, "BLOCK_OPEN=", 11) == 0) {
+        if(strncmp(line, "BLOCK_OPEN=", 11) == 0 && strcmp(mode, "BLOCK_OPEN") == 0) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
@@ -25,8 +25,18 @@ int config_block_words(const char *path) {
             }
         }
         
-        if(strncmp(line, "BLOCK_DELETE=", 13) == 0) {
+        if(strncmp(line, "BLOCK_DELETE=", 13) == 0 && strcmp(mode, "BLOCK_DELETE") == 0) {
             char *blockedWord = line + 13;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                fclose(config);
+                return 1;
+            }
+        }
+
+        if(strncmp(line, "BLOCK_CAT=", 10) == 0 && strcmp(mode, "BLOCK_CAT") == 0) {
+            char *blockedWord = line + 10;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
@@ -42,7 +52,7 @@ int config_block_words(const char *path) {
 // open hijack zum teschte: cat
 int open(const char *path, int flag, ...) {
     printf("hijacked functions for open got called!\n");
-    if(config_block_words(path)) {
+    if(config_block_words(path, "BLOCK_OPEN")) {
         printf("[hook] access denied: %s\n", path);
         errno = EACCES;
         return -1;
@@ -55,7 +65,7 @@ int open(const char *path, int flag, ...) {
 // remove hijack (rm in terminal)   zum teschte: LD_PRELOAD=./privacy.so rm 02-OS-FS26-Project-Topics.pdf
 int unlinkat(int dirfd, const char *pathname, int flags) {
     printf("Hijacked unlinkat() called!\n");
-    if(config_block_words(pathname)) {
+    if(config_block_words(pathname, "BLOCK_DELETE")) {
         printf("[hook] access denied: %s\n", pathname);
         errno = EACCES; // "Permission denied"
         return -1;
@@ -68,10 +78,8 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
 
 // write hijack   zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
-    static __thread int active = 0; // flag so there won't be a loop
 
-    if (fildes == 1 && !active) {
-        active = 1;
+    if (fildes == 1) {
         printf("Hijacked write() called!\n");
         const char* art =
         ".................:::::;+xxxxxxx+++xx++++++++++x+++++++;;;;;;;;;;;;;;;;;+;;;\n"
@@ -91,7 +99,7 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
         ":::::;+xxXX+::.::;;;+++++++xx+++++++++++++++++++;;;;:::::::.:;+;;;;;;;;;;;;\n"
         ":::::;x+XXX;::;;+++++xxxxxxxxxxx++++++++xxxxxxxxx++++;;;;:::.;+;;;;;;;;;;;;\n"
         ":::::++xXXx:;;++xxxXXXXXXXxxxxxxx++++++xxxxXXXXXXXxxx+++;;;:.:+x++;;;;;;;;;\n"
-        "::::;xxXX$XxXXXXXXXXXXXXXXXXXxxxx++++++xxxXXXXXXXXXXX$$$XXX$XXXXXXx++;;;;;\n"
+        "::::;xxXX$XxXXXXXXXXXXXXXXXXXxxxx++++++xxxXXXXXXXXXXX$$$XXX$XXXXXXx++;;;;;;\n"
         "$$$&$Xxxxxx++xxxxxxX$$$XXXXXXXxx+++;;;;+xxXXX$$&$Xx+++++++++;;++;;x$&&&$X;;\n"
         "&&$x:::++xX+xxxx++++;++xX$&$XXxx++;;:;;;+x$&$XXxx++;;;;+++++;+x+;:;+X&&&$;;\n"
         "&&$XxxxxxxX+xxxxxxx++++xXXXXX$$$Xx+++xX$&$XXXXXXXxx+++++++++;;xXxXxxX$&&$+;\n"
@@ -132,7 +140,6 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
         syscall(SYS_write, 1, art, strlen(art));
         const char* msg = "Big Jenna is watching you...\n";
         syscall(SYS_write, fildes, msg, strlen(msg)); // syscall calls kernel directly -> maybe necessary for all printf statements if there are problems
-        active = 0;
         return nbyte;
     }
 
