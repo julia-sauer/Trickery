@@ -4,13 +4,15 @@ build-priv:
 build-conn:
 	gcc -shared -fPIC -o libconn.so src/connect.c -ldl
 
+build-mem:
+	gcc -shared -fPIC -o libmem.so src/memory.c -ldl
 
 lib1: build-priv
-	LD_PRELOAD=./libpriv.so $(CMD)
-
-lib2: build-priv
 	LD_PRELOAD=./libpriv.so $(CMD) $(ARG)
 
-lib3: build-conn
+lib2: build-conn
 	LD_PRELOAD=./libconn.so curl $(ARG)
+
+lib3: build-mem
+	LD_PRELOAD=./libmem.so $(CMD) $(ARG)
 
