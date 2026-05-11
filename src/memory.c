@@ -5,8 +5,6 @@
 #include <unistd.h>
 
 
-int times_called = 0;
-
 void *malloc(size_t size) {
     //fprintf(stderr, "Hijacked function malloc called!\n");
     write(STDOUT_FILENO, "Hijacked function malloc called!\n", strlen("Hijacked function malloc called!\n"));
