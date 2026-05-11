@@ -36,16 +36,6 @@ int config_block_words(const char *path, const char *mode) {
                 return 1;
             }
         }
-
-        if(strncmp(line, "BLOCK_CAT=", 10) == 0 && strcmp(mode, "BLOCK_CAT") == 0) {
-            char *blockedWord = line + 10;
-            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
-
-            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose(config);
-                return 1;
-            }
-        }
     }
     fclose(config);
     return 0;
