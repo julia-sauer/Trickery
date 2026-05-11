@@ -19,7 +19,7 @@ int config_block_words(const char *path) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\n")] = '\0';
 
-            if(strstr(path, blockedWord) != NULL) {
+            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
                 fclose;
                 return 1;
             }
