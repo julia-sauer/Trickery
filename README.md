@@ -31,3 +31,15 @@ gcc -shared -fPIC -o lib<name>.so <file> -ldl ERKLÄRT:
 <file> the source that is compilated
 -l link against library
 dl dynamic linking library -> brauchen wir wegen dlsym, also um die 'richtige' funktion/syscall zu finden wenn unsere funktion nicht greifen soll.
+
+## Probleme/Fazit
+
+This is not possible to hook because that is a shell builtin aka it's an internal command of bash:
+```bash
+echo
+```
+
+This is also not possible to hook because it bypasses glibc's write() and calls the kernel directly (or via a private symbol) so our LD_PRELOAD ovveride of write() is never used:
+```bash
+/bin/echo
+```

@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <sys/syscall.h>
+#include <sys/uio.h>
+#include <stdarg.h>
 
 int config_block_words(const char *path, const char *mode) {
     FILE *config = fopen("config.txt", "r"); //opens the config file with read permission
@@ -27,16 +29,6 @@ int config_block_words(const char *path, const char *mode) {
         
         if(strncmp(line, "BLOCK_DELETE=", 13) == 0 && strcmp(mode, "BLOCK_DELETE") == 0) {
             char *blockedWord = line + 13;
-            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
-
-            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose(config);
-                return 1;
-            }
-        }
-
-        if(strncmp(line, "BLOCK_CAT=", 10) == 0 && strcmp(mode, "BLOCK_CAT") == 0) {
-            char *blockedWord = line + 10;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
@@ -76,11 +68,13 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
     return real_unlinkat(dirfd, pathname, flags);
 }
 
-// write hijack   zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
+// write hijack for writing into terminal (cat)  zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
 
-    if (fildes == 1) {
-        printf("Hijacked write() called!\n");
+    if (fildes == 1) { // hijack for the write function into the terminal
+        const char* hijack = "Hijacked write() called!\n";
+        syscall(SYS_write, fildes, hijack, strlen(hijack));
+
         const char* art =
         ".................:::::;+xxxxxxx+++xx++++++++++x+++++++;;;;;;;;;;;;;;;;;+;;;\n"
         "..................::;xXxxxxXXxxxxxxxxxxxxxxxxxxxxxx+++++++;;;;;;;;;;;;;+;;;\n"
@@ -138,10 +132,29 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
         "XXX$$$$$$$&&$$&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&$$&&&&&&&&&&&&&&&&&&$$$&&&&&&\n"
         "XX$$$$$$$$&&&$$&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&$$&&&&&&&&&&&&&&&&&&&&$$&&&&&&\n";
         syscall(SYS_write, 1, art, strlen(art));
+
         const char* msg = "Big Jenna is watching you...\n";
-        syscall(SYS_write, fildes, msg, strlen(msg)); // syscall calls kernel directly -> maybe necessary for all printf statements if there are problems
-        return nbyte;
+        return syscall(SYS_write, fildes, msg, strlen(msg)); // syscall calls kernel directly -> maybe necessary for all printf statements if there are problems
     }
 
     return syscall(SYS_write, fildes, buf, nbyte); // if it's no write to terminal (fildes != 1) then do the intended thing
 } // die fantastische bilder ka me uf https://www.asciiart.eu/image-to-ascii
+
+// write hijack for writing into files   zum teschte: LD_PRELOAD=./privacy.so ./writeTest
+size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
+
+    size_t(*real_fwrite)(const void *, size_t, size_t, FILE *) = dlsym(RTLD_NEXT, "fwrite");
+
+    if (!real_fwrite) {
+        return 0;
+    }
+
+    const char *dbg = "Hijacked fwrite() called!\n"; // debug message to terminal (stderr)
+    write(2, dbg, strlen(dbg));
+
+    const char *msg = "HIJACKED FILE CONTENT\n";
+    real_fwrite(msg, 1, strlen(msg), stream); // replace original content
+
+    return nitems; // pretend original write succeeded
+}
+
