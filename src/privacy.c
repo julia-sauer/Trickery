@@ -17,7 +17,7 @@ int config_block_words(const char *path, const char *mode) {
     char line[256];
 
     while (fgets(line, sizeof(line), config)) {
-        if(strncmp(line, "BLOCK_OPEN=", 11) == 0 && strcmp(mode, "BLOCK_OPEN") == 0) {
+        if(strncmp(line, "BLOCK_OPEN=", 11) == 0 && strcmp(mode, "BLOCK_OPEN") == 0) { //first part is to compare the actual path with the words in the config file, second part is to make sure that successful comparisons only happen with the relevant BLOCK of the config file
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
