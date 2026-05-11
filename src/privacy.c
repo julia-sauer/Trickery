@@ -17,17 +17,26 @@ int config_block_words(const char *path) {
     while (fgets(line, sizeof(line), config)) {
         if(strncmp(line, "BLOCK_OPEN=", 11) == 0) {
             char *blockedWord = line + 11;
-            blockedWord[strcspn(blockedWord, "\n")] = '\0';
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose;
+                fclose(config);
+                return 1;
+            }
+        }
+        
+        if(strncmp(line, "BLOCK_DELETE=", 13) == 0) {
+            char *blockedWord = line + 13;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                fclose(config);
                 return 1;
             }
         }
     }
-    fclose;
+    fclose(config);
     return 0;
-
 }
 
 // open hijack zum teschte: cat
@@ -43,13 +52,18 @@ int open(const char *path, int flag, ...) {
     return real_open(path, flag);
 }
 
-// remove hijack (rm in terminal)   zum teschte: LD_PRELOAD=./privacy.so rm cannotRemove.txt
+// remove hijack (rm in terminal)   zum teschte: LD_PRELOAD=./privacy.so rm 02-OS-FS26-Project-Topics.pdf
 int unlinkat(int dirfd, const char *pathname, int flags) {
     printf("Hijacked unlinkat() called!\n");
-    printf("You do not have permission to delete: %s\n", pathname);
-    
-    errno = EACCES; // "Permission denied"
-    return -1; // signals failure to the caller
+    if(config_block_words(pathname)) {
+        printf("[hook] access denied: %s\n", pathname);
+        errno = EACCES; // "Permission denied"
+        return -1;
+    }
+    printf("[hook] access granted: %s\n", pathname);
+    int(*real_unlinkat)(int, const char *, int) = dlsym(RTLD_NEXT, "unlinkat");
+
+    return real_unlinkat(dirfd, pathname, flags);
 }
 
 // write hijack   zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
