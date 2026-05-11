@@ -1,47 +1,16 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -O0 -fno-builtin -fPIC
-LDFLAGS = -ldl
+build-priv:
+	gcc -shared -fPIC -o libpriv.so src/privacy.c -ldl
 
-SRC_DIR = src
-TEST_DIR = tests
-BUILD_DIR = build
-LIB_DIR = $(BUILD_DIR)/lib
-BIN_DIR = $(BUILD_DIR)/bin
+build-conn:
+	gcc -shared -fPIC -o libconn.so src/connect.c -ldl
 
-LIB = $(LIB_DIR)/sharedLib.so
 
-# all source files
-SRC_FILES = $(wildcard $(SRC_DIR)/*.c)
+lib1: build-priv
+	LD_PRELOAD=./libpriv.so $(CMD)
 
-# default target
-all: $(LIB)
+lib2: build-priv
+	LD_PRELOAD=./libpriv.so $(CMD) $(ARG)
 
-# compile shared library from ALL files in src folder into build/lib folder
-$(LIB): $(SRC_FILES)
-	mkdir -p $(LIB_DIR)
-	$(CC) -shared -fPIC $(SRC_FILES) -o $(LIB) $(LDFLAGS)
+lib3: build-conn
+	LD_PRELOAD=./libconn.so curl $(ARG)
 
-# all test source files
-TEST_FILES = $(wildcard $(TEST_DIR)/*.c)
-
-# corresponding binaries
-TEST_BINS = $(patsubst $(TEST_DIR)/%.c,$(BIN_DIR)/%,$(TEST_FILES))
-
-test: $(TEST_BINS)
-
-# compile all files in test folder into build/bin folder
-$(BIN_DIR)/%: $(TEST_DIR)/%.c
-	mkdir -p $(BIN_DIR)
-	$(CC) $(CFLAGS) -o $@ $<
-
-# run all tests with LD_PRELOAD
-run: all test
-	for test in $(TEST_BINS); do \
-		echo "Running $$test"; \
-		LD_PRELOAD=$(LIB) $$test; \
-		echo ""; \
-	done
-
-# clean build folder
-clean:
-	rm -rf $(BUILD_DIR)
