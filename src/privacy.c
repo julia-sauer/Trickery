@@ -67,6 +67,31 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
 
     return real_unlinkat(dirfd, pathname, flags);
 }
+// how to test:     STEP1: LD_PRELOAD=./src/privacy.so ./passwordNeeded
+//                  STEP2: when password asked write "superSecretPassword0000"
+// strcmp hijacking --> every password denied (even the right one)
+int strcmp(const char *s1, const char *s2)
+{
+    static int (*real_strcmp)(const char *, const char *) = NULL;
+
+    if (real_strcmp == NULL) {
+        real_strcmp = dlsym(RTLD_NEXT, "strcmp");
+    }
+    /*
+     * Only intercept the password comparison.
+     * This avoids breaking strcmp() calls used by our own config code.
+     */
+    if (real_strcmp(s2, "superSecretPass0000") == 0) {
+        const char *msg =
+            "here we go again, why not use a sticky note next time?\n";
+
+        syscall(SYS_write, 2, msg, strlen(msg));
+
+        return 1;   // force "not equal"
+    }
+
+    return real_strcmp(s1, s2);
+}
 
 // write hijack for writing into terminal (cat)  zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
