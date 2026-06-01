@@ -38,7 +38,7 @@ int is_blocked_password(const char *password)
     return 0;
 }
 
-// how to test:     STEP1: LD_PRELOAD=./src/privacy.so ./passwordNeeded
+// how to test:     STEP1: LD_PRELOAD=./privacy.so ./passwordNeeded
 //                  STEP2: when password asked write "superSecretPassword0000"
 // strcmp hijacking --> every password denied (even the right one)
 int strcmp(const char *s1, const char *s2)
