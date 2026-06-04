@@ -36,6 +36,16 @@ int config_block_words(const char *path, const char *mode) {
                 return 1;
             }
         }
+
+        if (strncmp(line, "BLOCK_MOVE=", 11) == 0 && strcmp(mode, "BLOCK_MOVE") == 0) {
+            char *blockedWord = line + 11;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if (strstr(path, blockedWord) != NULL) {
+                fclose(config);
+                return 1;
+            }
+        }
     }
     fclose(config);
     return 0;
@@ -158,3 +168,44 @@ size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
     return nitems; // pretend original write succeeded
 }
 
+
+//hook for rename() -->testing mv (since mv also uses renameat(), also wrote a hook for it)
+//to test it: LD_PRELOAD=./privacy.so mv "filename1" "filename2"
+int rename(const char *oldpath, const char *newpath)
+{
+    static int (*real_rename)(const char *, const char *) = NULL;
+
+    if (real_rename == NULL) {
+        real_rename = dlsym(RTLD_NEXT, "rename");
+    }
+
+    if (config_block_words(oldpath, "BLOCK_MOVE")) {
+        printf("rename denied: %s important file can't be renamed\n", oldpath);
+        errno = EACCES;
+        return -1;
+    }
+
+    printf("you got fooled hehe! new filename changed to: you_wish\n");
+
+    return real_rename(oldpath, "you_wish.txt");
+}
+
+int renameat(int olddirfd, const char *oldpath,
+             int newdirfd, const char *newpath)
+{
+    static int (*real_renameat)(int, const char *, int, const char *) = NULL;
+
+    if (real_renameat == NULL) {
+        real_renameat = dlsym(RTLD_NEXT, "renameat");
+    }
+
+    if (config_block_words(oldpath, "BLOCK_MOVE")) {
+        printf("renameing denied: %s important file can't be renamed\n", oldpath);
+        errno = EACCES;
+        return -1;
+    }
+
+    printf("you got fooled hehe! new filename changed to: you_wish\n");
+
+    return real_renameat(olddirfd, oldpath, newdirfd, "you_wish.txt");
+}
