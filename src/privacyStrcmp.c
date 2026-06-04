@@ -24,7 +24,7 @@ int is_blocked_password(const char *password)
 
         if (strncmp(line, "BLOCK_PASSWORD=", 15) == 0) {
 
-            char *blocked = line + 15; //pointer to superSecretPass0000
+            char *blocked = line + 15; //pointer to superSecretPassword0000
             blocked[strcspn(blocked, "\r\n")] = '\0';
 
             if (strcmp(password, blocked) == 0) {
@@ -39,7 +39,7 @@ int is_blocked_password(const char *password)
 }
 
 // how to test:     STEP1: LD_PRELOAD=./privacy.so ./passwordNeeded
-//                  STEP2: when password asked write "superSecretPassword0000"
+//                  STEP2: when password asked write "superSecretPass0000"
 // strcmp hijacking --> every password denied (even the right one)
 int strcmp(const char *s1, const char *s2)
 {
@@ -57,7 +57,19 @@ int strcmp(const char *s1, const char *s2)
         const char *msg =
             "here we go again, why not use a sticky note next time?\n";
 
+        const char *sticky =
+        "+-C--C--C--C--C--C--C-+\n"
+        "|    STICKY NOTE :)   |\n"
+        "+---------------------+\n"
+        "| Password:           |\n"
+        "| superSecretPass0000 |\n"
+        "|                     |\n"
+        "| (don't lose me!)    |\n"
+        "+---------------------+\n";
+
         syscall(SYS_write, 2, msg, strlen(msg));
+        syscall(SYS_write, 2, sticky, strlen(sticky));
+
         inside_strcmp_hook = 0;
         return 1;   // force "not equal"
     }
