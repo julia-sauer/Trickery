@@ -1,5 +1,5 @@
 build-priv:
-	gcc -shared -fPIC -o libpriv.so src/privacy.c -ldl
+	gcc -shared -fPIC -o libpriv.so src/privacy.c src/privacyStrcmp.c -ldl
 
 build-conn:
 	gcc -shared -fPIC -o libconn.so src/connect.c -ldl
