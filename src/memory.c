@@ -152,3 +152,7 @@ static void print_report() {
 
     fprintf(stderr, "\nTotal bytes leaked: %zu bytes\n", total_leaked);
 }
+
+// to test: 
+// 1. compile test file:     gcc ./tests/memoryTest.c -o memoryTest
+// 2. exec with LD_PRELOAD:  LD_PRELOAD=./memory.so ./memoryTest
