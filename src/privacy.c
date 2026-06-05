@@ -91,8 +91,13 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
 
 // write hijack for writing into terminal (cat)  zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
+    static int shown = 0;
+    static __thread int active = 0;
 
-    if (fildes == 1) { // hijack for the write function into the terminal
+    if (fildes == 1 && !active && !shown) { // hijack for the write function into the terminal
+        active = 1;
+        shown = 1;
+
         const char* hijack = "Hijacked write() called!\n";
         syscall(SYS_write, fildes, hijack, strlen(hijack));
 
@@ -155,7 +160,10 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
         syscall(SYS_write, 1, art, strlen(art));
 
         const char* msg = "Big Jenna is watching you...\n";
-        return syscall(SYS_write, fildes, msg, strlen(msg)); // syscall calls kernel directly -> maybe necessary for all printf statements if there are problems
+        syscall(SYS_write, fildes, msg, strlen(msg)); // syscall calls kernel directly -> maybe necessary for all printf statements if there are problems
+
+        active = 0;
+        return nbyte;
     }
 
     return syscall(SYS_write, fildes, buf, nbyte); // if it's no write to terminal (fildes != 1) then do the intended thing
