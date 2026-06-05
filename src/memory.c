@@ -3,12 +3,17 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <unistd.h>
+#include <execinfo.h>
+
+#define MAX_STACK 16 // sets max number of stack frames we store
 
 // linked list to track allocations
 typedef struct Allocation {
-    void *ptr; // returned by malloc
+    void *ptr; // returned pointer to alloc memory by malloc
     size_t size; // requested alloc size
     struct Allocation *next; // next item in allocation list
+    void *stack[MAX_STACK]; // backtrace at allocation time
+    int depth; // number of stack frames
 } Allocation;
 
 static Allocation *allocations = NULL; // head of linked list
@@ -27,9 +32,9 @@ static void (*real_free)(void *) = NULL;
 static int initialized = 0;
 static int in_hook = 0;
 
-static void print_report(void); // prototype/forward declaration
+static void print_report(); // prototype/forward declaration
 
-static void init_hooks(void) { // initialises real malloc/free function
+static void init_hooks() { // initialises real malloc/free function
     if (initialized) {
         return;
     }
@@ -39,6 +44,11 @@ static void init_hooks(void) { // initialises real malloc/free function
     real_free   = dlsym(RTLD_NEXT, "free");
 
     atexit(print_report);
+}
+
+static int capture_stack(void** buf) { // gets the current size of stack at alloc time
+    int size = backtrace(buf, MAX_STACK);
+    return size;
 }
 
 // malloc() hijack
@@ -60,6 +70,7 @@ void *malloc(size_t size) {
         node->ptr = ptr;
         node->size = size;
         node->next = allocations;
+        node->depth = capture_stack(node->stack);
         allocations = node;
         current_bytes += size;
 
@@ -114,11 +125,9 @@ void free(void *ptr) {
 static void print_report() {
     fprintf(stderr, "\n==============================\n" ">  Memory Allocation Report  <\n" "==============================\n");
 
-    fprintf(stderr, "malloc() calls : %zu\n" "free() calls   : %zu\n" "current bytes: %zu\n" "peak bytes   : %zu\n\n", malloc_calls, free_calls, current_bytes, peak_bytes);
+    fprintf(stderr, "malloc() calls : %zu\n" "free() calls   : %zu\n" "current bytes  : %zu\n" "peak bytes     : %zu\n\n", malloc_calls, free_calls, current_bytes, peak_bytes);
 
-    Allocation *cur = allocations;
-
-    if (!cur) {
+    if (!allocations) {
         fprintf(stderr, "No memory leaks detected.\n");
         return;
     }
@@ -127,12 +136,19 @@ static void print_report() {
 
     size_t total_leaked = 0;
 
-    while (cur) {
-        fprintf(stderr, "LEAK: ptr=%p size=%zu bytes\n", cur->ptr, cur->size);
+    for (Allocation *a = allocations; a; a = a->next) {
+        fprintf(stderr, "LEAK: ptr=%p size=%zu bytes\n", a->ptr, a->size);
+        total_leaked += a->size;
 
-        total_leaked += cur->size;
-        cur = cur->next;
+        char** symbols = backtrace_symbols(a->stack, a->depth); // convert stack address to readable 
+
+        for (int i = 0; i < a->depth; i++) {
+            fprintf(stderr, "  %s\n", symbols[i]);
+        }
+
+        free(symbols);
+        fprintf(stderr, "\n");
     }
-    
-    fprintf(stderr, "\nTotal leaked: %zu bytes\n", total_leaked);
+
+    fprintf(stderr, "\nTotal bytes leaked: %zu bytes\n", total_leaked);
 }
