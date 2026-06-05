@@ -13,3 +13,10 @@ void *malloc(size_t size) {
     return (*real_malloc)(size);
     
 }
+
+void free(void *ptr) {
+    write(STDOUT_FILENO, "Hijacked function free called!\n", strlen("Hijacked function free called!\n"));
+    void (*real_free)(void*) = dlsym(RTLD_NEXT, "free");
+
+    return real_free(ptr);
+}
