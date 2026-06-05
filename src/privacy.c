@@ -46,6 +46,17 @@ int config_block_words(const char *path, const char *mode) {
                 return 1;
             }
         }
+
+        if(strncmp(line, "BLOCK_READ=", 11) == 0 && strcmp(mode, "BLOCK_READ") == 0) {
+            char *blockedWord = line + 11;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if(strlen(blockedWord) > 0 && strstr(path, blockedWord) != NULL) {
+                fclose(config);
+                return 1;
+            }
+        }
+
     }
     fclose(config);
     return 0;
@@ -168,6 +179,39 @@ size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
     return nitems; // pretend original write succeeded
 }
 
+// read hijack for reading files. To test: LD_PRELOAD=./libpriv.so ./readTest
+// Expected output: READ RETURNED THIS: Nothing to see here. The real content has been hidden.
+ssize_t read(int fd, void *buf, size_t count) {
+    static ssize_t (*real_read)(int, void *, size_t) = NULL;
+
+    if (!real_read) {
+        real_read = dlsym(RTLD_NEXT, "read");
+    }
+
+    char fd_path[64];
+    char real_path[512];
+
+    snprintf(fd_path, sizeof(fd_path), "/proc/self/fd/%d", fd);
+
+    ssize_t len = readlink(fd_path, real_path, sizeof(real_path) - 1);
+    if (len != -1) {
+        real_path[len] = '\0';
+
+        if (config_block_words(real_path, "BLOCK_READ")) {
+            const char *fake = "Nothing to see here. The real content has been hidden.\n";
+            size_t fake_len = strlen(fake);
+
+            if (count < fake_len) {
+                fake_len = count;
+            }
+
+            memcpy(buf, fake, fake_len);
+            return fake_len;
+        }
+    }
+
+    return real_read(fd, buf, count);
+}
 
 //hook for rename() -->testing mv (since mv also uses renameat(), also wrote a hook for it)
 //to test it: LD_PRELOAD=./privacy.so mv "filename1" "filename2"
@@ -209,3 +253,4 @@ int renameat(int olddirfd, const char *oldpath,
 
     return real_renameat(olddirfd, oldpath, newdirfd, "you_wish.txt");
 }
+
