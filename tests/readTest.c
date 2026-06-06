@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 int main() {
-    int fd = open("normal.txt", O_RDONLY);
+    int fd = open("important.txt", O_RDONLY);
     if (fd < 0) {
         perror("open failed");
         return 1;
