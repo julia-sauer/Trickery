@@ -57,6 +57,16 @@ int config_block_words(const char *path, const char *mode) {
             }
         }
 
+        if(strncmp(line, "BLOCK_WRITE=", 12) == 0 && strcmp(mode, "BLOCK_WRITE") == 0) {
+            char *blockedWord = line + 12;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                fclose(config);
+                return 1;
+            }
+        }
+
     }
     fclose(config);
     return 0;
@@ -170,9 +180,9 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
 } // die fantastische bilder ka me uf https://www.asciiart.eu/image-to-ascii
 
 // write hijack for writing into files   zum teschte: LD_PRELOAD=./privacy.so ./writeTest
-size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
+size_t fwrite(const void* ptr, size_t size, size_t nitems, FILE* stream) {
 
-    size_t(*real_fwrite)(const void *, size_t, size_t, FILE *) = dlsym(RTLD_NEXT, "fwrite");
+    size_t(*real_fwrite)(const void*, size_t, size_t, FILE*) = dlsym(RTLD_NEXT, "fwrite");
 
     if (!real_fwrite) {
         return 0;
@@ -181,10 +191,23 @@ size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
     const char *dbg = "Hijacked fwrite() called!\n"; // debug message to terminal (stderr)
     write(2, dbg, strlen(dbg));
 
-    const char *msg = "HIJACKED FILE CONTENT\n";
-    real_fwrite(msg, 1, strlen(msg), stream); // replace original content
+    char fd_path[64];
+    char real_path[512];
+    int fd = fileno(stream); // converts FILE* to a file descriptor
+    snprintf(fd_path, sizeof(fd_path), "/proc/self/fd/%d", fd); // builds path link
+    ssize_t len = readlink(fd_path, real_path, sizeof(real_path) - 1); // builds real path out of path link
 
-    return nitems; // pretend original write succeeded
+    if (len != -1){
+        real_path[len] = '\0';
+        if(config_block_words(real_path, "BLOCK_WRITE")) {
+            const char *msg = "HIJACKED FILE CONTENT: NO 'CHEAT' WHATSOEVER ALLOWED!!\n";
+            real_fwrite(msg, 1, strlen(msg), stream);
+            return nitems;
+        }
+    }    
+
+    real_fwrite(ptr, size, nitems, stream);
+    return nitems;
 }
 
 // read hijack for reading files. To test: LD_PRELOAD=./libpriv.so ./readTest
