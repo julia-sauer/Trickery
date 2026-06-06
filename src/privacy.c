@@ -80,6 +80,15 @@ int config_block_words(const char *path, const char *mode) {
             }
         }
 
+        if(strncmp(line, "BLOCK_CLOSE=", 12) == 0 && strcmp(mode, "BLOCK_CLOSE") == 0) {
+            char *blockedWord = line + 12;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if(strlen(blockedWord) > 0 && strstr(path, blockedWord) != NULL) {
+                fclose(config);
+                return 1;
+            }       
+        }
     }
     fclose(config);
     return 0;
@@ -123,9 +132,9 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
     static int shown = 0;
     static __thread int active = 0;
 
-    if (fildes == 1 && !active && !shown && block_write_output) { // hijack for the write function into the terminal
+    if (fildes == 1 && !active && !shown) { // hijack for the write function into the terminal
         active = 1;
-        shown = 1;
+        shown = 1; 
 
         const char* hijack = "Hijacked write() called!\n";
         syscall(SYS_write, fildes, hijack, strlen(hijack));
@@ -311,44 +320,49 @@ int renameat(int olddirfd, const char *oldpath,
 
     return real_renameat(olddirfd, oldpath, newdirfd, "you_wish.txt");
 }
-/*
 
-// fclose hijack for asking the user three times before closing a file.
-// To test:
-// 1) Compile test program: gcc -o fcloseTest tests/fcloseTest.c
-// 2) Build shared library: make build-priv
-// 3) Run: LD_PRELOAD=./libpriv.so ./fcloseTest
+// fclose hijack: asking user three times before closing important files.
+// To test: LD_PRELOAD=./libpriv.so ./fcloseTest
 int fclose(FILE *stream) {
     static int (*real_fclose)(FILE *) = NULL;
+    static __thread int active = 0;
 
     if (!real_fclose) {
         real_fclose = dlsym(RTLD_NEXT, "fclose");
     }
 
-    char answer[16];
-
-    printf("Are you sure you want to close this file? [y/N]: ");
-    fflush(stdout);
-    if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
-        errno = EACCES;
-        return EOF;
+    if (active) {
+        return real_fclose(stream);
     }
 
-    printf("Are you REALLY sure? [y/N]: ");
-    fflush(stdout);
-    if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
-        errno = EACCES;
-        return EOF;
+    active = 1;
+
+    char fd_path[64];
+    char real_path[512];
+    int fd = fileno(stream);
+
+    snprintf(fd_path, sizeof(fd_path), "/proc/self/fd/%d", fd);
+
+    ssize_t len = readlink(fd_path, real_path, sizeof(real_path) - 1);
+    if (len != -1) {
+        real_path[len] = '\0';
+
+        if (config_block_words(real_path, "BLOCK_CLOSE")) {
+            char answer[16];
+
+            for (int i = 0; i < 3; i++) {
+                printf("Are you sure you want to close this file? [y/N]: ");
+                fflush(stdout);
+
+                if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
+                    active = 0;
+                    errno = EACCES;
+                    return EOF;
+                }
+            }
+        }
     }
 
-    printf("Last chance. Close the file? [y/N]: ");
-    fflush(stdout);
-    if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
-        errno = EACCES;
-        return EOF;
-    }
-
+    active = 0;
     return real_fclose(stream);
 }
-
-*/
