@@ -9,6 +9,9 @@
 #include <sys/uio.h>
 #include <stdarg.h>
 
+// global var to see if for write blocked file got opened
+static int block_write_output = 0;
+
 int config_block_words(const char *path, const char *mode) {
     FILE *config = fopen("config.txt", "r"); //opens the config file with read permission
     if(config == NULL){
@@ -57,8 +60,18 @@ int config_block_words(const char *path, const char *mode) {
             }
         }
 
-        if(strncmp(line, "BLOCK_WRITE=", 12) == 0 && strcmp(mode, "BLOCK_WRITE") == 0) {
-            char *blockedWord = line + 12;
+        if(strncmp(line, "BLOCK_WRITE_FILE=", 17) == 0 && strcmp(mode, "BLOCK_WRITE_FILE") == 0) {
+            char *blockedWord = line + 17;
+            blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
+
+            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                fclose(config);
+                return 1;
+            }
+        }
+
+        if(strncmp(line, "BLOCK_WRITE_CAT=", 16) == 0 && strcmp(mode, "BLOCK_WRITE_CAT") == 0) {
+            char *blockedWord = line + 16;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
@@ -82,6 +95,12 @@ int open(const char *path, int flag, ...) {
     }
     int(*real_open)(const char *, int, ...) = dlsym(RTLD_NEXT, "open");
 
+    if (config_block_words(path, "BLOCK_WRITE_CAT")) {
+        block_write_output = 1;
+    } else {
+        block_write_output = 0;
+    }
+
     return real_open(path, flag);
 }
 
@@ -99,12 +118,12 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
     return real_unlinkat(dirfd, pathname, flags);
 }
 
-// write hijack for writing into terminal (cat)  to test: LD_PRELOAD=./privacy.so cat cannotRemove.txt
+// write hijack for writing into terminal (cat)  to test: LD_PRELOAD=./privacy.so cat ./tests/readTest.c
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
     static int shown = 0;
     static __thread int active = 0;
 
-    if (fildes == 1 && !active && !shown) { // hijack for the write function into the terminal
+    if (fildes == 1 && !active && !shown && block_write_output) { // hijack for the write function into the terminal
         active = 1;
         shown = 1;
 
@@ -177,7 +196,7 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
     }
 
     return syscall(SYS_write, fildes, buf, nbyte); // if it's no write to terminal (fildes != 1) then do the intended thing
-} // die fantastische bilder ka me uf https://www.asciiart.eu/image-to-ascii
+}
 
 // write hijack for writing into files   zum teschte: LD_PRELOAD=./privacy.so ./writeTest
 size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
@@ -199,7 +218,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
 
     if (len != -1){
         real_path[len] = '\0';
-        if(config_block_words(real_path, "BLOCK_WRITE")) {
+        if(config_block_words(real_path, "BLOCK_WRITE_FILE")) {
             const char *msg = "HIJACKED FILE CONTENT: NO 'CHEAT' WHATSOEVER ALLOWED!!\n";
             real_fwrite(msg, 1, strlen(msg), stream);
             return nitems;
