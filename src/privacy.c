@@ -177,12 +177,12 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
     }
 
     return syscall(SYS_write, fildes, buf, nbyte); // if it's no write to terminal (fildes != 1) then do the intended thing
-} // these pictures can be made at https://www.asciiart.eu/image-to-ascii
+} // die fantastische bilder ka me uf https://www.asciiart.eu/image-to-ascii
 
-// write hijack for writing into files   to test: LD_PRELOAD=./privacy.so ./writeTest
-size_t fwrite(const void* ptr, size_t size, size_t nitems, FILE* stream) {
+// write hijack for writing into files   zum teschte: LD_PRELOAD=./privacy.so ./writeTest
+size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
 
-    size_t(*real_fwrite)(const void*, size_t, size_t, FILE*) = dlsym(RTLD_NEXT, "fwrite");
+    size_t(*real_fwrite)(const void *, size_t, size_t, FILE *) = dlsym(RTLD_NEXT, "fwrite");
 
     if (!real_fwrite) {
         return 0;
@@ -229,6 +229,13 @@ ssize_t read(int fd, void *buf, size_t count) {
         real_path[len] = '\0';
 
         if (config_block_words(real_path, "BLOCK_READ")) {
+            static int fake_already_sent = 0;
+
+            if(fake_already_sent){
+                fake_already_sent = 0;
+                return 0;
+            }
+
             const char *fake = "Nothing to see here. The real content has been hidden.\n";
             size_t fake_len = strlen(fake);
 
@@ -237,6 +244,7 @@ ssize_t read(int fd, void *buf, size_t count) {
             }
 
             memcpy(buf, fake, fake_len);
+            fake_already_sent = 1;
             return fake_len;
         }
     }
@@ -284,4 +292,44 @@ int renameat(int olddirfd, const char *oldpath,
 
     return real_renameat(olddirfd, oldpath, newdirfd, "you_wish.txt");
 }
+/*
 
+// fclose hijack for asking the user three times before closing a file.
+// To test:
+// 1) Compile test program: gcc -o fcloseTest tests/fcloseTest.c
+// 2) Build shared library: make build-priv
+// 3) Run: LD_PRELOAD=./libpriv.so ./fcloseTest
+int fclose(FILE *stream) {
+    static int (*real_fclose)(FILE *) = NULL;
+
+    if (!real_fclose) {
+        real_fclose = dlsym(RTLD_NEXT, "fclose");
+    }
+
+    char answer[16];
+
+    printf("Are you sure you want to close this file? [y/N]: ");
+    fflush(stdout);
+    if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
+        errno = EACCES;
+        return EOF;
+    }
+
+    printf("Are you REALLY sure? [y/N]: ");
+    fflush(stdout);
+    if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
+        errno = EACCES;
+        return EOF;
+    }
+
+    printf("Last chance. Close the file? [y/N]: ");
+    fflush(stdout);
+    if (fgets(answer, sizeof(answer), stdin) == NULL || answer[0] != 'y') {
+        errno = EACCES;
+        return EOF;
+    }
+
+    return real_fclose(stream);
+}
+
+*/
