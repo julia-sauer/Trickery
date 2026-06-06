@@ -72,7 +72,7 @@ int config_block_words(const char *path, const char *mode) {
     return 0;
 }
 
-// open hijack zum teschte: cat
+// open hijack to test: cat
 int open(const char *path, int flag, ...) {
     printf("hijacked functions for open got called!\n");
     if(config_block_words(path, "BLOCK_OPEN")) {
@@ -85,7 +85,7 @@ int open(const char *path, int flag, ...) {
     return real_open(path, flag);
 }
 
-// remove hijack (rm in terminal)   zum teschte: LD_PRELOAD=./privacy.so rm 02-OS-FS26-Project-Topics.pdf
+// remove hijack (rm in terminal)   to test: LD_PRELOAD=./privacy.so rm 02-OS-FS26-Project-Topics.pdf
 int unlinkat(int dirfd, const char *pathname, int flags) {
     printf("Hijacked unlinkat() called!\n");
     if(config_block_words(pathname, "BLOCK_DELETE")) {
@@ -99,7 +99,7 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
     return real_unlinkat(dirfd, pathname, flags);
 }
 
-// write hijack for writing into terminal (cat)  zum teschte: LD_PRELOAD=./privacy.so cat cannotRemove.txt
+// write hijack for writing into terminal (cat)  to test: LD_PRELOAD=./privacy.so cat cannotRemove.txt
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
     static int shown = 0;
     static __thread int active = 0;
@@ -177,9 +177,9 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
     }
 
     return syscall(SYS_write, fildes, buf, nbyte); // if it's no write to terminal (fildes != 1) then do the intended thing
-} // die fantastische bilder ka me uf https://www.asciiart.eu/image-to-ascii
+} // these pictures can be made at https://www.asciiart.eu/image-to-ascii
 
-// write hijack for writing into files   zum teschte: LD_PRELOAD=./privacy.so ./writeTest
+// write hijack for writing into files   to test: LD_PRELOAD=./privacy.so ./writeTest
 size_t fwrite(const void* ptr, size_t size, size_t nitems, FILE* stream) {
 
     size_t(*real_fwrite)(const void*, size_t, size_t, FILE*) = dlsym(RTLD_NEXT, "fwrite");
