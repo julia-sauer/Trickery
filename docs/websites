@@ -12,3 +12,6 @@ https://stackoverflow.com/questions/1276294/getting-ipv4-address-from-a-sockaddr
 
 https://man7.org/linux/man-pages/man3/backtrace.3.html -> for malloc/free backtrace
 https://sourceware.org/glibc/manual/latest/html_node/Backtraces.html -> for malloc/free backtrace
+
+https://linuxvox.com/blog/what-are-shell-built-in-commands-in-linux/ -> explains echo is a built-in
+https://www.gnu.org/software/bash/manual/html_node/Shell-Builtin-Commands.html -> explains why built-ins can't be hooked
