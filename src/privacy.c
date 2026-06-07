@@ -241,6 +241,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
 // read hijack for reading files. To test: LD_PRELOAD=./libpriv.so ./readTest
 // Expected output: READ RETURNED THIS: Nothing to see here. The real content has been hidden.
 ssize_t read(int fd, void *buf, size_t count) {
+    printf("Hijacked read() called!\n");
     static ssize_t (*real_read)(int, void *, size_t) = NULL;
 
     if (!real_read) {
@@ -284,6 +285,7 @@ ssize_t read(int fd, void *buf, size_t count) {
 //to test it: LD_PRELOAD=./privacy.so mv "filename1" "filename2"
 int rename(const char *oldpath, const char *newpath)
 {
+    printf("Hijacked rename() called!\n");
     static int (*real_rename)(const char *, const char *) = NULL;
 
     if (real_rename == NULL) {
@@ -304,6 +306,7 @@ int rename(const char *oldpath, const char *newpath)
 int renameat(int olddirfd, const char *oldpath,
              int newdirfd, const char *newpath)
 {
+    printf("Hijacked renameat() called!\n");
     static int (*real_renameat)(int, const char *, int, const char *) = NULL;
 
     if (real_renameat == NULL) {
@@ -324,6 +327,7 @@ int renameat(int olddirfd, const char *oldpath,
 // fclose hijack: asking user three times before closing important files.
 // To test: LD_PRELOAD=./libpriv.so ./fcloseTest
 int fclose(FILE *stream) {
+    printf("Hijacked fclose() called!\n");
     static int (*real_fclose)(FILE *) = NULL;
     static __thread int active = 0;
 
