@@ -281,7 +281,7 @@ ssize_t read(int fd, void *buf, size_t count) {
     return real_read(fd, buf, count);
 }
 
-//hook for rename() -->testing mv (since mv also uses renameat(), also wrote a hook for it)
+//hook for rename() -->testing mv (since mv also uses renameat() with wsl and renameat2() on VM, also wrote a hook for them)
 //to test it: LD_PRELOAD=./privacy.so mv "filename1" "filename2"
 int rename(const char *oldpath, const char *newpath)
 {
@@ -322,6 +322,29 @@ int renameat(int olddirfd, const char *oldpath,
     printf("you got fooled hehe! new filename changed to: you_wish\n");
 
     return real_renameat(olddirfd, oldpath, newdirfd, "you_wish.txt");
+}
+
+int renameat2(int olddirfd, const char *oldpath,
+              int newdirfd, const char *newpath,
+              unsigned int flags)
+{
+    fprintf(stderr, "Hijacked renameat2() called!\n");
+
+    static int (*real_renameat2)(int, const char *, int, const char *, unsigned int) = NULL;
+
+    if (real_renameat2 == NULL) {
+        real_renameat2 = dlsym(RTLD_NEXT, "renameat2");
+    }
+
+    if (config_block_words(oldpath, "BLOCK_MOVE")) {
+        fprintf(stderr, "renaming denied: %s important file can't be renamed\n", oldpath);
+        errno = EACCES;
+        return -1;
+    }
+
+    fprintf(stderr, "you got fooled hehe! new filename changed to: you_wish.txt\n");
+
+    return real_renameat2(olddirfd, oldpath, newdirfd, "you_wish.txt", flags);
 }
 
 // fclose hijack: asking user three times before closing important files.
