@@ -327,7 +327,7 @@ int renameat2(int olddirfd, const char *oldpath,
 // fclose hijack: asking user three times before closing important files.
 // To test: LD_PRELOAD=./libpriv.so ./fcloseTest
 int fclose(FILE *stream) {
-    printf("Hijacked fclose() called!\n");
+    //printf("Hijacked fclose() called!\n");
     static int (*real_fclose)(FILE *) = NULL;
     static __thread int active = 0;
 
