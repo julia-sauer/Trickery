@@ -303,7 +303,7 @@ int rename(const char *oldpath, const char *newpath)
     return real_rename(oldpath, "you_wish.txt");
 }
 
-int renameat2(int olddirfd, const char *oldpath,
+int renameat(int olddirfd, const char *oldpath,
              int newdirfd, const char *newpath)
 {
     printf("Hijacked renameat() called!\n");
