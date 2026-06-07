@@ -62,7 +62,7 @@ int strcmp(const char *s1, const char *s2)
         "|    STICKY NOTE :)   |\n"
         "+---------------------+\n"
         "| Password:           |\n"
-        "| superSecretPass0000 |\n"
+        "| 1234                |\n"
         "|                     |\n"
         "| (don't lose me!)    |\n"
         "+---------------------+\n";

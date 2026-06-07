@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 int main() {
-    FILE *file = fopen("important.txt", "r");
+    FILE *file = fopen("ungeheim.txt", "r");
 
     if (file == NULL) {
         perror("fopen failed");

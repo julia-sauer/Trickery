@@ -10,7 +10,7 @@ int main()
     printf("Password: ");
     scanf("%99s", input);
 
-    if (strcmp(input, "superSecretPass0000") == 0) {
+    if (strcmp(input, "1234") == 0) {
         printf("Access granted\n");
     } else {
         printf("Access denied\n");
