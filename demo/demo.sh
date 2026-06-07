@@ -5,6 +5,7 @@ gcc ../tests/memoryTest.c -o memoryTest
 gcc ../tests/readTest.c -o readTest
 gcc ../tests/strcmpTest.c -o strcmpTest
 gcc ../tests/writeTest.c -o writeTest
+gcc ../tests/fopenTest.c -o fopenTest
 
 echo "Hiiilllffee" > help.txt
 echo "THIS IS VERY SECRET CONTENT IN HERE!!! Julia is a dwarf!" > secret.txt
@@ -14,9 +15,11 @@ echo "a² + b² = c², e = m*c²" > cheatsheet_OS.txt
 echo "Vino" > wichtig.pdf
 echo "printf("pseudo")" > pseudo.c
 echo "This file is changeable" > static.txt
+echo "This is totally normal, everything possible" > normal.txt
 
 gcc -shared -fPIC ../src/privacy.c ../src/privacyStrcmp.c ../src/connect.c -o hook1.so -ldl
 gcc -shared -fPIC ../src/privacy.c ../src/memory.c -o hook2.so -ldl
+gcc -shared -fPIC ../src/privacy.c -o hook3.so -ldl
 
 
 arg1="$1"
@@ -24,6 +27,8 @@ arg1="$1"
 if [ "$arg1" -eq 1 ]; then #without hook lib
     echo "============= open ============="
     cat secret.txt #open
+    echo "============= fopen ============="
+    ./fopenTest
     echo "============= fclose ============="
     ./fcloseTest
     echo "============= read ============="
@@ -49,6 +54,8 @@ if [ "$arg1" -eq 1 ]; then #without hook lib
 else
     echo "============= open ============="
     LD_PRELOAD=./hook1.so cat secret.txt #open
+    echo "============= fopen ============="
+    LD_PRELOAD=./hook3.so ./fopenTest
     echo "============= fclose ============="
     LD_PRELOAD=./hook2.so ./fcloseTest
     echo "============= read ============="

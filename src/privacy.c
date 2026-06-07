@@ -13,7 +13,10 @@
 static int block_write_output = 0;
 
 int config_block_words(const char *path, const char *mode) {
-    FILE *config = fopen("config.txt", "r"); //opens the config file with read permission
+    FILE *(*real_fopen)(const char *restrict, const char *restrict) = dlsym(RTLD_NEXT, "fopen");
+    int (*real_fclose)(FILE *) = dlsym(RTLD_NEXT, "fclose");
+
+    FILE *config = real_fopen("config.txt", "r"); //opens the config file with read permission
     if(config == NULL){
         return 0;
     }
@@ -25,7 +28,7 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }
         }
@@ -35,7 +38,7 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }
         }
@@ -45,7 +48,7 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if (strstr(path, blockedWord) != NULL) {
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }
         }
@@ -55,7 +58,7 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strlen(blockedWord) > 0 && strstr(path, blockedWord) != NULL) {
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }
         }
@@ -65,7 +68,7 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }
         }
@@ -75,7 +78,7 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }
         }
@@ -85,18 +88,18 @@ int config_block_words(const char *path, const char *mode) {
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
             if(strlen(blockedWord) > 0 && strstr(path, blockedWord) != NULL) {
-                fclose(config);
+                real_fclose(config);
                 return 1;
             }       
         }
     }
-    fclose(config);
+    real_fclose(config);
     return 0;
 }
 
 // open hijack to test: cat
 int open(const char *path, int flag, ...) {
-    printf("hijacked functions for open got called!\n");
+    syscall(SYS_write, 1, "Hijacked function for open got called!\n", strlen("Hijacked function for open got called!\n"));
     if(config_block_words(path, "BLOCK_OPEN")) {
         printf("[hook] access denied: %s\n", path);
         errno = EACCES;
@@ -115,7 +118,7 @@ int open(const char *path, int flag, ...) {
 
 // remove hijack (rm in terminal)   to test: LD_PRELOAD=./privacy.so rm 02-OS-FS26-Project-Topics.pdf
 int unlinkat(int dirfd, const char *pathname, int flags) {
-    printf("Hijacked unlinkat() called!\n");
+    syscall(SYS_write, 1, "Hijacked unlinkat() called!\n", strlen("Hijacked unlinkat() called!\n"));
     if(config_block_words(pathname, "BLOCK_DELETE")) {
         printf("[hook] access denied: %s\n", pathname);
         errno = EACCES; // "Permission denied"
@@ -241,7 +244,7 @@ size_t fwrite(const void *ptr, size_t size, size_t nitems, FILE *stream) {
 // read hijack for reading files. To test: LD_PRELOAD=./libpriv.so ./readTest
 // Expected output: READ RETURNED THIS: Nothing to see here. The real content has been hidden.
 ssize_t read(int fd, void *buf, size_t count) {
-    printf("Hijacked read() called!\n");
+    syscall(SYS_write, 1, "Hijacked read() called!\n", strlen("Hijacked read() called!\n"));
     static ssize_t (*real_read)(int, void *, size_t) = NULL;
 
     if (!real_read) {
@@ -392,4 +395,34 @@ int fclose(FILE *stream) {
 
     active = 0;
     return real_fclose(stream);
+}
+
+//fopen function for using it with a c program
+FILE *fopen(const char *restrict path, const char *restrict mode) {
+    static __thread int active = 0;
+
+    FILE *(*real_fopen)(const char *restrict, const char *restrict) = dlsym(RTLD_NEXT, "fopen");
+
+    if(active) {
+        return real_fopen(path, mode);
+    }
+    active = 1;
+
+    //syscall(SYS_write, 1, "Hijacked fopen() called!\n", strlen("Hijacked fopen() called!\n"));
+
+    if(config_block_words(path, "BLOCK_OPEN")) {
+        printf("[hook] access denied by fopen: %s\n", path);
+        active = 0;
+        errno = EACCES;
+        return NULL;
+    }
+
+    if (config_block_words(path, "BLOCK_WRITE_CAT")) {
+        block_write_output = 1;
+    } else {
+        block_write_output = 0;
+    }
+
+    active = 0;
+    return real_fopen(path, mode);
 }
