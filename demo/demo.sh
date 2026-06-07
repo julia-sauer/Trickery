@@ -13,6 +13,7 @@ echo "It is really important that this file is not read by anyone!!!" > importan
 echo "a² + b² = c², e = m*c²" > cheatsheet_OS.txt
 echo "Vino" > wichtig.pdf
 echo "printf("pseudo")" > pseudo.c
+echo "This file is changeable" > static.txt
 
 gcc -shared -fPIC ../src/privacy.c ../src/privacyStrcmp.c ../src/connect.c -o hook1.so -ldl
 gcc -shared -fPIC ../src/privacy.c ../src/memory.c -o hook2.so -ldl
@@ -61,6 +62,7 @@ else
     echo "============= before mv (rename) and rm (unlinkat)============="
     ls
     LD_PRELOAD=./hook1.so mv help.txt nohelp.txt
+    LD_PRELOAD=./hook1.so mv static.txt dynamic.txt
     LD_PRELOAD=./hook1.so rm wichtig.pdf
     echo "============= after mv (rename) and rm (unlinkat) ============="
     ls
