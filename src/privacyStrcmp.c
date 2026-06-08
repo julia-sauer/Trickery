@@ -24,7 +24,7 @@ int is_blocked_password(const char *password)
 
         if (strncmp(line, "BLOCK_PASSWORD=", 15) == 0) {
 
-            char *blocked = line + 15; //pointer to superSecretPassword0000
+            char *blocked = line + 15; //pointer to 1234
             blocked[strcspn(blocked, "\r\n")] = '\0';
 
             if (strcmp(password, blocked) == 0) {
@@ -39,7 +39,7 @@ int is_blocked_password(const char *password)
 }
 
 // how to test:     STEP1: LD_PRELOAD=./privacy.so ./passwordNeeded
-//                  STEP2: when password asked write "superSecretPass0000"
+//                  STEP2: when password asked write "1234"
 // strcmp hijacking --> every password denied (even the right one)
 int strcmp(const char *s1, const char *s2)
 {
