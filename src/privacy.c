@@ -184,7 +184,7 @@ ssize_t write(int fildes, const void *buf, size_t nbyte) {
     static int shown = 0;
     static __thread int active = 0;
 
-    if (fildes == 1 && !active && !shown) { // hijack for the write function into the terminal
+    if (fildes == 1 && !active && !shown && block_write_output) { // hijack for the write function into the terminal
         active = 1;
         shown = 1; 
 
