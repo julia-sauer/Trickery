@@ -21,6 +21,7 @@ echo "Should not be seen." > valuable.txt
 gcc -shared -fPIC ../src/privacy.c ../src/privacyStrcmp.c ../src/connect.c -o hook1.so -ldl
 gcc -shared -fPIC ../src/privacy.c ../src/memory.c -o hook2.so -ldl
 gcc -shared -fPIC ../src/privacy.c -o hook3.so -ldl
+gcc -shared -fPIC ../src/connect.c -o hook4.so -ldl
 
 
 arg1="$1"
@@ -68,7 +69,7 @@ else
     cat output.txt
     cat cheatsheet_OS.txt
     echo "============= connect ============="
-    LD_PRELOAD=./hook1.so curl example.com
+    LD_PRELOAD=./hook4.so curl example.com
     echo "============= before mv (rename) and rm (unlinkat)============="
     ls
     LD_PRELOAD=./hook1.so mv help.txt nohelp.txt

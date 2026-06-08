@@ -6,7 +6,10 @@
 #include <dlfcn.h>
 
 int config_block_address(const char *ip) {
-    FILE *config = fopen("config.txt", "r"); //opens the config file with read permission
+    FILE *(*real_fopen)(const char *restrict, const char *restrict) = dlsym(RTLD_NEXT, "fopen");
+    int (*real_fclose)(FILE *) = dlsym(RTLD_NEXT, "fclose");
+
+    FILE *config = real_fopen("config.txt", "r"); //opens the config file with read permission
     if(config == NULL){ //if file couldn't be found 
         return 0; //return 0, 'false' so the address shouldn't be blocked 
     }
@@ -16,7 +19,7 @@ int config_block_address(const char *ip) {
         if(strncmp(line, "BLOCK_ADDR=", 11) == 0) { //each line is compared with "BLOCK_ADDR=", which are the first 11 chars
             char *blockedAddr = line + 11; //the ip's to block are in the line from the 12th chars to the end
             blockedAddr[strcspn(blockedAddr, "\n")] = '\0'; //makes sure that if there is a line break, the \n is not read, otherwise the comparison would always be false
-            //strcspn finds the first \n and replaces it with \0 (end of string)
+            //strcspn finds the first \n and replaces it with \0 (end of string)2
             printf("Should not connect if ip %s corresponds to some ip in:  %s\n", ip, blockedAddr);     
            
             char *token = strtok(blockedAddr, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
@@ -24,7 +27,7 @@ int config_block_address(const char *ip) {
             while(token != NULL) {
 
                 if(strcmp(ip, token) == 0) { //compares the given ip with all token(s), if they are the same:
-                    fclose(config); //the configuration file is closed
+                    real_fclose(config); //the configuration file is closed
                     return 1; //1 is returned, so true, which causes the connect function to block this address
                 }
 
@@ -33,7 +36,7 @@ int config_block_address(const char *ip) {
             
         }
     }
-    fclose(config); //would be reached if there is no BLOCK_ADDR in the config file or if the relevant ip is not to be blocked
+    real_fclose(config); //would be reached if there is no BLOCK_ADDR in the config file or if the relevant ip is not to be blocked
     return 0; //address is not blocked because this returns 0 ~ false
 
 }

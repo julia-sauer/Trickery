@@ -82,7 +82,7 @@ int config_block_words(const char *path, const char *mode) {
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strlen(token) > 0 && strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -133,7 +133,7 @@ int config_block_words(const char *path, const char *mode) {
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strlen(token) > 0 && strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
                     real_fclose(config);
                     return 1;
                 }   
