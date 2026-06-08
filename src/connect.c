@@ -42,21 +42,22 @@ int config_block_address(const char *ip) {
 }
 
 char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen) //transforms sockaddr into a readable ip address (used for comparing with the ones in the config file)
-{
-    switch(sa->sa_family) {
+{ //sockaddr *sa is the socket address that contains the IP + the protocoltype, *s is the char buffer into which the transfomred IP is written, maxlen is the maxium size of the buffer to prevent overflow.
+    switch(sa->sa_family) { //sa_family is a field in each sockaddr which declares which protocol was used, so if AF_INET (IPv4) or AF_INET6 (IPv6)
         case AF_INET: //for IPv4
-            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+        //inet_ntop = from network to presentation (from binary to readable)
+            inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr), //casts sockaddr *sa to sockaddr_in which is IPv4 specific structure, field sin_addr contains actual IPv4, which is then transformed from binary into readable
                     s, maxlen);
             break;
 
-        case AF_INET6: //for IPv6
+        case AF_INET6: //for IPv6 (functions the same way as IPv4 case)
             inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
                     s, maxlen);
             break;
         
         default: //if neither IPv4 nor IPv6
             strncpy(s, "Unknown AF", maxlen);
-            return NULL;
+            return NULL; //writes NULL in the buffer -> error indicator
     }
     return s;
 }
