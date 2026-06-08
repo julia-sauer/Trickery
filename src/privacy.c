@@ -27,9 +27,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }
         }
         
@@ -37,9 +44,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 13;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }
         }
 
@@ -47,9 +61,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if (strstr(path, blockedWord) != NULL) {
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }
         }
 
@@ -57,9 +78,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if(strlen(blockedWord) > 0 && strstr(path, blockedWord) != NULL) {
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }
         }
 
@@ -67,9 +95,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 17;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }
         }
 
@@ -77,9 +112,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 16;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if(strstr(path, blockedWord) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }
         }
 
@@ -87,9 +129,16 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 12;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            if(strlen(blockedWord) > 0 && strstr(path, blockedWord) != NULL) {
-                real_fclose(config);
-                return 1;
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            
+            while(token != NULL) {
+
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                    real_fclose(config);
+                    return 1;
+                }   
+
+                token = strtok(NULL,",");
             }       
         }
     }

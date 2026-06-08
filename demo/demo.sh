@@ -16,6 +16,7 @@ echo "Vino" > wichtig.pdf
 echo "printf("pseudo")" > pseudo.c
 echo "This file is changeable" > static.txt
 echo "This is totally normal, everything possible" > normal.txt
+echo "Should not be seen." > valuable.txt
 
 gcc -shared -fPIC ../src/privacy.c ../src/privacyStrcmp.c ../src/connect.c -o hook1.so -ldl
 gcc -shared -fPIC ../src/privacy.c ../src/memory.c -o hook2.so -ldl
@@ -27,6 +28,7 @@ arg1="$1"
 if [ "$arg1" -eq 1 ]; then #without hook lib
     echo "============= open ============="
     cat secret.txt #open
+    cat valuable.txt
     echo "============= fopen ============="
     ./fopenTest
     echo "============= fclose ============="
@@ -54,6 +56,7 @@ if [ "$arg1" -eq 1 ]; then #without hook lib
 else
     echo "============= open ============="
     LD_PRELOAD=./hook1.so cat secret.txt #open
+    LD_PRELOAD=./hook1.so cat valuable.txt
     echo "============= fopen ============="
     LD_PRELOAD=./hook3.so ./fopenTest
     echo "============= fclose ============="
