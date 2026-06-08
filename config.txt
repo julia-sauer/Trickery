@@ -1,4 +1,4 @@
-BLOCK_OPEN=secret
+BLOCK_OPEN=secret,valuable
 BLOCK_READ=important
 BLOCK_DELETE=.pdf
 BLOCK_PASSWORD=1234
