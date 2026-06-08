@@ -78,7 +78,7 @@ else
     echo "============= after mv (rename) and rm (unlinkat) ============="
     ls
     echo "============= write ============="
-    LD_PRELOAD=./hook1.so cat pseudo.c
+    LD_PRELOAD=./hook3.so cat pseudo.c
     echo "============= malloc & free ============="
     LD_PRELOAD=./hook2.so ./memoryTest
     echo "============= strcmp ============="
