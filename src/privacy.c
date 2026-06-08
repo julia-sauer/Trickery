@@ -289,15 +289,15 @@ ssize_t read(int fd, void *buf, size_t count) {
 int rename(const char *oldpath, const char *newpath)
 {
     printf("Hijacked rename() called!\n");
-    static int (*real_rename)(const char *, const char *) = NULL;
+    static int (*real_rename)(const char *, const char *) = NULL; // function pointer to store og. rename
 
     if (real_rename == NULL) {
-        real_rename = dlsym(RTLD_NEXT, "rename");
+        real_rename = dlsym(RTLD_NEXT, "rename"); //find the real function
     }
-
+// check on blocked words so we dont change "important" files for us
     if (config_block_words(oldpath, "BLOCK_MOVE")) {
         printf("rename denied: %s important file can't be renamed\n", oldpath);
-        errno = EACCES;
+        errno = EACCES; //denied permission
         return -1;
     }
 
@@ -306,8 +306,8 @@ int rename(const char *oldpath, const char *newpath)
     return real_rename(oldpath, "you_wish.txt");
 }
 
-int renameat(int olddirfd, const char *oldpath,
-             int newdirfd, const char *newpath)
+//rename at has extra variables as dirfd --> directory file descriptor
+int renameat(int olddirfd, const char *oldpath, int newdirfd, const char *newpath)
 {
     printf("Hijacked renameat() called!\n");
     static int (*real_renameat)(int, const char *, int, const char *) = NULL;
@@ -327,9 +327,9 @@ int renameat(int olddirfd, const char *oldpath,
     return real_renameat(olddirfd, oldpath, newdirfd, "you_wish.txt");
 }
 
-int renameat2(int olddirfd, const char *oldpath,
-              int newdirfd, const char *newpath,
-              unsigned int flags)
+//rename at has another extra variable flags-->which can change renaming behaviour
+//ex -->RENAME_NOREPLACE --> dont replace if target exist
+int renameat2(int olddirfd, const char *oldpath, int newdirfd, const char *newpath, unsigned int flags)
 {
     fprintf(stderr, "Hijacked renameat2() called!\n");
 
