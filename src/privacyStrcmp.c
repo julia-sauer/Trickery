@@ -24,7 +24,7 @@ int is_blocked_password(const char *password)
 
         if (strncmp(line, "BLOCK_PASSWORD=", 15) == 0) {
 
-            char *blocked = line + 15; //pointer to 1234
+            char *blocked = line + 15; //pointer to blocked password coming after BLOCK_PASSWORD
             blocked[strcspn(blocked, "\r\n")] = '\0';
 
             if (strcmp(password, blocked) == 0) {

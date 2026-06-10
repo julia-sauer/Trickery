@@ -27,11 +27,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens 
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -44,11 +44,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 13;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -61,11 +61,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -78,11 +78,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 11;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens 
             
             while(token != NULL) {
 
-                if(strlen(token) > 0 && strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strlen(token) > 0 && strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -95,11 +95,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 17;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens 
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -112,11 +112,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 16;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens  
             
             while(token != NULL) {
 
-                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -129,11 +129,11 @@ int config_block_words(const char *path, const char *mode) {
             char *blockedWord = line + 12;
             blockedWord[strcspn(blockedWord, "\r\n")] = '\0';
 
-            char *token = strtok(blockedWord, ","); //strtok splits the blockedAddr at every ',' so we have separate tokens (separate ip's in this case) 
+            char *token = strtok(blockedWord, ","); //strtok splits the blockedWord at every ',' so we have separate tokens (separate ip's in this case) 
             
             while(token != NULL) {
 
-                if(strlen(token) > 0 && strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this blockedWord string this is true
+                if(strlen(token) > 0 && strstr(path, token) != NULL) { //strstr searches for part strings so if the path has somewhere this token (blockedWord looked at) string this is true
                     real_fclose(config);
                     return 1;
                 }   
@@ -182,7 +182,7 @@ int unlinkat(int dirfd, const char *pathname, int flags) {
 // write hijack for writing into terminal (cat)  to test: LD_PRELOAD=./privacy.so cat ./tests/readTest.c
 ssize_t write(int fildes, const void *buf, size_t nbyte) {
     static int shown = 0;
-    static __thread int active = 0;
+    static __thread int active = 0; //thread_local variable
 
     if (fildes == 1 && !active && !shown && block_write_output) { // hijack for the write function into the terminal
         active = 1;
@@ -312,7 +312,7 @@ ssize_t read(int fd, void *buf, size_t count) {
         if (config_block_words(real_path, "BLOCK_READ")) {
             static int fake_already_sent = 0;
 
-            if(fake_already_sent){
+            if(fake_already_sent){ //checks if the fake content was already returned
                 fake_already_sent = 0;
                 return 0;
             }
@@ -324,7 +324,7 @@ ssize_t read(int fd, void *buf, size_t count) {
                 fake_len = count;
             }
 
-            memcpy(buf, fake, fake_len);
+            memcpy(buf, fake, fake_len); //copies fake_len - bytes from fake into the buffer
             fake_already_sent = 1;
             return fake_len;
         }
@@ -338,7 +338,7 @@ ssize_t read(int fd, void *buf, size_t count) {
 int rename(const char *oldpath, const char *newpath)
 {
     printf("Hijacked rename() called!\n");
-    static int (*real_rename)(const char *, const char *) = NULL; // function pointer to store og. rename
+    static int (*real_rename)(const char *, const char *) = NULL; // function pointer to store original rename
 
     if (real_rename == NULL) {
         real_rename = dlsym(RTLD_NEXT, "rename"); //find the real function
