@@ -48,12 +48,12 @@ if [ "$arg1" -eq 1 ]; then #without hook lib
     rm wichtig.pdf
     echo "============= after mv (rename) and rm (unlinkat) ============="
     ls
+    rm nohelp.txt
     echo "============= write ============="
     cat pseudo.c
     echo "============= strcmp ============="
     ./strcmpTest #wrong password
     ./strcmpTest #right password
-    rm nohelp.txt
 else
     echo "============= open ============="
     LD_PRELOAD=./hook1.so cat secret.txt #open
