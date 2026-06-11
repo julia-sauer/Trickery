@@ -30,8 +30,6 @@ if [ "$arg1" -eq 1 ]; then #without hook lib
     echo "============= open ============="
     cat secret.txt #open
     cat valuable.txt
-    echo "============= fopen ============="
-    ./fopenTest
     echo "============= fclose ============="
     ./fcloseTest
     echo "============= read ============="
@@ -58,10 +56,8 @@ else
     echo "============= open ============="
     LD_PRELOAD=./hook1.so cat secret.txt #open
     LD_PRELOAD=./hook1.so cat valuable.txt
-    echo "============= fopen ============="
-    LD_PRELOAD=./hook3.so ./fopenTest
     echo "============= fclose ============="
-    LD_PRELOAD=./hook2.so ./fcloseTest
+    LD_PRELOAD=./hook3.so ./fcloseTest
     echo "============= read ============="
     LD_PRELOAD=./hook1.so ./readTest
     echo "============= fwrite ============="
